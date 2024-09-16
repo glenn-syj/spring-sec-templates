@@ -1,13 +1,14 @@
-<!-- src/main/resources/templates/login.html -->
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Login with Mattermost</title>
+    <title>Mattermost Login</title>
 </head>
 <body>
-<h1>로그인</h1>
-<a href="/oauth2/authorization/mattermost">
-    <button>Mattermost로 로그인</button>
-</a>
+<h1>Mattermost OAuth2 Login</h1>
+<form action="/start-login" method="post">
+    <label>Mattermost Server URL:</label><br>
+    <input type="text" name="serverUrl" required><br><br>
+    <input type="submit" value="로그인">
+</form>
 </body>
 </html>

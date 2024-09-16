@@ -1,0 +1,42 @@
+spring:
+  mvc:
+    static-path-pattern: /static/**
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/mattermost
+    username: mmuser
+    password: mmuser_password
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+
+  security:
+    oauth2:
+      client:
+        registration:
+          mattermost:
+            client-id: ${MM_CLIENT_ID}
+            client-secret: ${MM_CLIENT_SECRET}
+            scope: openid,profile,email
+            authorization-grant-type: authorization_code
+            redirect-uri: "http://localhost:8080/login/oauth2/code/mattermost"
+            client-name: Mattermost
+            client-authentication-method: post
+        provider:
+          mattermost:
+            authorization-uri: http://localhost:8065/oauth/authorize
+            token-uri: http://localhost:8065/oauth/token
+            user-info-uri: http://localhost:8065/api/v4/user
+            user-name-attribute: username
+
+logging:
+  level:
+    org:
+      springframework:
+        security: DEBUG
+        web: DEBUG
