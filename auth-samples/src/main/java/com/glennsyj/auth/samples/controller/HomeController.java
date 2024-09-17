@@ -11,13 +11,13 @@ public class HomeController {
 		return "index";  // index.html 반환
 	}
 
-	@GetMapping("/login")
-	public String login() {
-		return "login";  // index.html 반환
-	}
+	// @GetMapping("/login")
+	// public String login() {
+	// 	return "login";  // index.html 반환
+	// }
 
-	@GetMapping("/login/oauth2/code/mattermost")
-	public String callback() {
-		return "index";  // index.html 반환
-	}
+	// @GetMapping("/login/oauth2/code/mattermost")
+	// public String callback() {
+	// 	return "index";  // index.html 반환
+	// }
 }

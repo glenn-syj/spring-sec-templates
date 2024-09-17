@@ -1,76 +1,100 @@
 package com.glennsyj.auth.samples.config;
 
-import java.util.UUID;
-
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
-import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
-import org.springframework.security.oauth2.core.AuthorizationGrantType;
-import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
-import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.client.web.*;
+import org.springframework.security.oauth2.core.endpoint.*;
+import org.springframework.security.oauth2.core.*;
+import org.springframework.stereotype.Component;
+import jakarta.servlet.http.*;
+import java.util.*;
 
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpSession;
-
+@Component
 public class CustomAuthorizationRequestResolver implements OAuth2AuthorizationRequestResolver {
 
-	private final String authorizationRequestBaseUri; // "/oauth2/authorization"
+	private final ClientRegistrationRepository clientRegistrationRepository;
+	private final String authorizationRequestBaseUri = "/oauth2/authorization";
 
-	public CustomAuthorizationRequestResolver(String authorizationRequestBaseUri) {
-		this.authorizationRequestBaseUri = authorizationRequestBaseUri;
+	public CustomAuthorizationRequestResolver(ClientRegistrationRepository clientRegistrationRepository) {
+		this.clientRegistrationRepository = clientRegistrationRepository;
 	}
 
 	@Override
 	public OAuth2AuthorizationRequest resolve(HttpServletRequest request) {
-		String requestUri = request.getRequestURI();
-		if (!requestUri.equals(authorizationRequestBaseUri + "/mattermost")) {
+		return resolve(request, null);
+	}
+
+	@Override
+	public OAuth2AuthorizationRequest resolve(HttpServletRequest request, String registrationId) {
+		if (!isAuthorizationRequest(request)) {
 			return null;
 		}
 
-		HttpSession session = request.getSession(false);
-		if (session == null) {
-			return null;
+		String serverUrl = request.getParameter("serverUrl");
+		if (serverUrl == null) {
+			// 세션에서 서버 URL 가져오기
+			HttpSession session = request.getSession(false);
+			if (session != null) {
+				serverUrl = (String) session.getAttribute("serverUrl");
+			}
+		} else {
+			// 서버 URL을 세션에 저장
+			HttpSession session = request.getSession();
+			session.setAttribute("serverUrl", serverUrl);
 		}
 
-		String serverUrl = (String) session.getAttribute("mattermost_server_url");
+		if (serverUrl == null) {
+			throw new OAuth2AuthenticationException(new OAuth2Error("invalid_request"), "Mattermost 서버 주소가 필요합니다.");
+		}
 
-		// TODO: this should be done in an applicaiton level, not in user informs.
-		String clientId = (String) session.getAttribute("mattermost_client_id");
-		String clientSecret = (String) session.getAttribute("mattermost_client_secret");
+		// 서버 URL 정규화
+		serverUrl = normalizeServerUrl(serverUrl);
 
-		if (serverUrl == null || clientId == null || clientSecret == null) {
-			return null;
+		// 환경 변수에서 클라이언트 자격 증명 가져오기
+		String clientId = System.getenv("MATTERMOST_CLIENT_ID");
+		String clientSecret = System.getenv("MATTERMOST_CLIENT_SECRET");
+
+		if (clientId == null || clientSecret == null) {
+			throw new IllegalStateException("환경 변수 MATTERMOST_CLIENT_ID와 MATTERMOST_CLIENT_SECRET을 설정해야 합니다.");
 		}
 
 		// ClientRegistration 생성
 		ClientRegistration clientRegistration = buildClientRegistration(serverUrl, clientId, clientSecret);
 
-		// 세션에 저장하여 토큰 교환 시 사용
-		session.setAttribute("clientRegistration", clientRegistration);
-
 		// OAuth2AuthorizationRequest 생성
-		OAuth2AuthorizationRequest authorizationRequest = OAuth2AuthorizationRequest.authorizationCode()
-			.authorizationUri(clientRegistration.getProviderDetails().getAuthorizationUri())
+		return OAuth2AuthorizationRequest.authorizationCode()
 			.clientId(clientRegistration.getClientId())
-			.redirectUri("{baseUrl}/login/oauth2/code/mattermost")
+			.authorizationUri(clientRegistration.getProviderDetails().getAuthorizationUri())
+			.redirectUri(clientRegistration.getRedirectUri())
 			.scopes(clientRegistration.getScopes())
 			.state(UUID.randomUUID().toString())
+			.additionalParameters(Collections.emptyMap())
+			.attributes(attrs -> attrs.put(OAuth2ParameterNames.REGISTRATION_ID, clientRegistration.getRegistrationId()))
 			.build();
-
-		return authorizationRequest;
 	}
 
-	@Override
-	public OAuth2AuthorizationRequest resolve(HttpServletRequest request, String clientRegistrationId) {
-		return resolve(request);
+	private boolean isAuthorizationRequest(HttpServletRequest request) {
+		return request.getRequestURI().startsWith(authorizationRequestBaseUri);
+	}
+
+	private String normalizeServerUrl(String serverUrl) {
+		if (!serverUrl.startsWith("http")) {
+			serverUrl = "https://" + serverUrl;
+		}
+		if (serverUrl.endsWith("/")) {
+			serverUrl = serverUrl.substring(0, serverUrl.length() - 1);
+		}
+		return serverUrl;
 	}
 
 	private ClientRegistration buildClientRegistration(String serverUrl, String clientId, String clientSecret) {
+		String registrationId = "mattermost";
 		String authorizationUri = serverUrl + "/oauth/authorize";
 		String tokenUri = serverUrl + "/oauth/access_token";
 		String userInfoUri = serverUrl + "/api/v4/users/me";
-		String redirectUriTemplate = "{baseUrl}/login/oauth2/code/mattermost";
+		String redirectUriTemplate = "{baseUrl}/login/oauth2/code/" + registrationId;
 
-		return ClientRegistration.withRegistrationId("mattermost")
+		return ClientRegistration.withRegistrationId(registrationId)
 			.clientId(clientId)
 			.clientSecret(clientSecret)
 			.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
@@ -80,9 +104,8 @@ public class CustomAuthorizationRequestResolver implements OAuth2AuthorizationRe
 			.authorizationUri(authorizationUri)
 			.tokenUri(tokenUri)
 			.userInfoUri(userInfoUri)
-			.userNameAttributeName("username") // 사용자 정보 응답에 따라 조정
+			.userNameAttributeName("username")
 			.clientName("Mattermost")
 			.build();
 	}
 }
-
