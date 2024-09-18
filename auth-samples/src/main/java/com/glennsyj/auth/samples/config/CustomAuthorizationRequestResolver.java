@@ -1,5 +1,7 @@
 package com.glennsyj.auth.samples.config;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.web.*;
@@ -12,6 +14,8 @@ import java.util.*;
 @Component
 public class CustomAuthorizationRequestResolver implements OAuth2AuthorizationRequestResolver {
 
+	private static final Logger logger = LoggerFactory.getLogger(CustomAuthorizationRequestResolver.class);
+
 	private final ClientRegistrationRepository clientRegistrationRepository;
 	private final String authorizationRequestBaseUri = "/oauth2/authorization";
 
@@ -21,6 +25,8 @@ public class CustomAuthorizationRequestResolver implements OAuth2AuthorizationRe
 
 	@Override
 	public OAuth2AuthorizationRequest resolve(HttpServletRequest request) {
+
+		logger.debug("no registrationId");
 		return resolve(request, null);
 	}
 
@@ -51,8 +57,10 @@ public class CustomAuthorizationRequestResolver implements OAuth2AuthorizationRe
 		serverUrl = normalizeServerUrl(serverUrl);
 
 		// 환경 변수에서 클라이언트 자격 증명 가져오기
-		String clientId = System.getenv("MATTERMOST_CLIENT_ID");
-		String clientSecret = System.getenv("MATTERMOST_CLIENT_SECRET");
+		String clientId = System.getenv("MM_CLIENT_ID");
+		logger.info("clientId: {}", clientId);
+		String clientSecret = System.getenv("MM_CLIENT_SECRET");
+		logger.info("clientId: {}", clientSecret);
 
 		if (clientId == null || clientSecret == null) {
 			throw new IllegalStateException("환경 변수 MATTERMOST_CLIENT_ID와 MATTERMOST_CLIENT_SECRET을 설정해야 합니다.");
@@ -60,6 +68,10 @@ public class CustomAuthorizationRequestResolver implements OAuth2AuthorizationRe
 
 		// ClientRegistration 생성
 		ClientRegistration clientRegistration = buildClientRegistration(serverUrl, clientId, clientSecret);
+
+		// 세션에 ClientRegistration 저장
+		HttpSession session = request.getSession();
+		session.setAttribute("clientRegistration", clientRegistration);
 
 		// OAuth2AuthorizationRequest 생성
 		return OAuth2AuthorizationRequest.authorizationCode()
@@ -92,12 +104,14 @@ public class CustomAuthorizationRequestResolver implements OAuth2AuthorizationRe
 		String authorizationUri = serverUrl + "/oauth/authorize";
 		String tokenUri = serverUrl + "/oauth/access_token";
 		String userInfoUri = serverUrl + "/api/v4/users/me";
-		String redirectUriTemplate = "{baseUrl}/login/oauth2/code/" + registrationId;
+		String redirectUriTemplate = "http://localhost:8080/login/oauth2/code/" + registrationId;
+
+		logger.debug("buildClientRegistration done.");
 
 		return ClientRegistration.withRegistrationId(registrationId)
 			.clientId(clientId)
 			.clientSecret(clientSecret)
-			.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+			.clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_POST)
 			.authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
 			.redirectUri(redirectUriTemplate)
 			.scope("email", "profile")
