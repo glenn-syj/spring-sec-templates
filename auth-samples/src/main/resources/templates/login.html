@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Mattermost Login</title>
+</head>
+<body>
+<h1>Mattermost OAuth2 Login</h1>
+<form action="/start-login" method="post">
+    <label>Mattermost Server URL:</label><br>
+    <input type="text" name="serverUrl" required><br><br>
+    <input type="submit" value="로그인">
+</form>
+</body>
+</html>

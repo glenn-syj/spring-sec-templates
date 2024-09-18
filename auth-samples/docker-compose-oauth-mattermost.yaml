@@ -1,0 +1,50 @@
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    container_name: db
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: mattermost
+      MYSQL_USER: mmuser
+      MYSQL_PASSWORD: mmuser_password
+    volumes:
+      - db-volume:/var/lib/mysql
+    networks:
+      - mattermost-network
+
+  mattermost:
+    image: mattermost/mattermost-team-edition:latest
+    restart: unless-stopped
+    container_name: mattermost
+    ports:
+        - "8065:8065"
+    environment:
+      - MM_SQLSETTINGS_DRIVERNAME=mysql
+      - MM_SQLSETTINGS_DATASOURCE=mmuser:mmuser_password@tcp(db:3306)/mattermost?charset=utf8mb4&readTimeout=30s&writeTimeout=30s
+      - MM_SERVICESETTINGS_SITEURL=http://localhost:8065
+      - MM_SERVICESETTINGS_ENABLEOUTGOINGWEBHOOKS=true
+      - MM_SERVICESETTINGS_ENABLEINCOMINGWEBHOOKS=true
+      - MM_SERVICESETTINGS_ENABLEAPIv4=true
+      - MM_SERVICESETTINGS_ENABLECUSTOMEMOJI=true
+      - MM_SERVICESETTINGS_ENABLEPOSTUSERNAMEOVERRIDE=true
+      - MM_SERVICESETTINGS_ENABLEPOSTICONOVERRIDE=true
+      - MM_PLUGINSETTINGS_ENABLE=true
+      - MM_PLUGINSETTINGS_ENABLEUPLOADS=true
+    volumes:
+      - mattermost-volume:/mattermost/data
+    depends_on:
+      - db
+    networks:
+      - mattermost-network
+
+volumes:
+  db-volume:
+  mattermost-volume:
+
+networks:
+  mattermost-network:
+    name: mattermost-network
+    driver: bridge
