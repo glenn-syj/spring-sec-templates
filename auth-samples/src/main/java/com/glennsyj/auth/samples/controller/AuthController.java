@@ -1,5 +1,6 @@
 package com.glennsyj.auth.samples.controller;
 
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -16,16 +17,32 @@ public class AuthController {
 	}
 
 	@PostMapping("/start-login")
-	public String startLogin(@RequestParam("serverUrl") String serverUrl,
-		@RequestParam("clientId") String clientId,
-		@RequestParam("clientSecret") String clientSecret,
-		HttpSession session) {
-		// 세션에 값 저장
-		session.setAttribute("mattermost_server_url", serverUrl);
-		session.setAttribute("mattermost_client_id", clientId);
-		session.setAttribute("mattermost_client_secret", clientSecret);
+	public String startLogin(@RequestParam("serverUrl") String serverUrl, HttpSession session) {
+		// 서버 URL 정규화
+		String normalizedServerUrl = normalizeServerUrl(serverUrl);
+
+		// 환경 변수에서 클라이언트 자격 증명 가져오기
+		String clientId = System.getenv("MM_CLIENT_ID");
+		String clientSecret = System.getenv("MM_CLIENT_SECRET");
+
+		if (clientId == null || clientSecret == null) {
+			// 오류 처리: 클라이언트 자격 증명이 설정되지 않음
+			return "redirect:/login?error=client_credentials_not_set";
+		}
+
+		session.setAttribute("serverUrl", serverUrl);
 
 		// OAuth2 인증 엔드포인트로 리디렉션
-		return "redirect:/login/oauth2/code/mattermost";
+		return "redirect:/oauth2/authorization/mattermost";
+	}
+
+	private String normalizeServerUrl(String serverUrl) {
+		if (!serverUrl.startsWith("http")) {
+			serverUrl = "https://" + serverUrl;
+		}
+		if (serverUrl.endsWith("/")) {
+			serverUrl = serverUrl.substring(0, serverUrl.length() - 1);
+		}
+		return serverUrl;
 	}
 }
