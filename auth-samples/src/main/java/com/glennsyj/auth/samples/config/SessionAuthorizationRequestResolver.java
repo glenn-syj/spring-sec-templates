@@ -1,17 +1,29 @@
 package com.glennsyj.auth.samples.config;
 
+import java.util.Collections;
+import java.util.UUID;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.oauth2.client.registration.ClientRegistration;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.oauth2.client.web.*;
-import org.springframework.security.oauth2.core.endpoint.*;
-import org.springframework.security.oauth2.core.*;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestResolver;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
+import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.OAuth2Error;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.security.oauth2.core.endpoint.OAuth2ParameterNames;
 import org.springframework.stereotype.Component;
-import jakarta.servlet.http.*;
-import java.util.*;
+
+import com.glennsyj.auth.samples.repository.CustomClientRegistrationRepository;
+
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 @Component
+@Profile("oauth-session")
 public class SessionAuthorizationRequestResolver implements OAuth2AuthorizationRequestResolver {
 
 	private static final Logger logger = LoggerFactory.getLogger(SessionAuthorizationRequestResolver.class);
@@ -19,7 +31,7 @@ public class SessionAuthorizationRequestResolver implements OAuth2AuthorizationR
 	private final ClientRegistrationRepository clientRegistrationRepository;
 	private final String authorizationRequestBaseUri = "/oauth2/authorization";
 
-	public SessionAuthorizationRequestResolver(ClientRegistrationRepository clientRegistrationRepository) {
+	public SessionAuthorizationRequestResolver(CustomClientRegistrationRepository clientRegistrationRepository) {
 		this.clientRegistrationRepository = clientRegistrationRepository;
 	}
 

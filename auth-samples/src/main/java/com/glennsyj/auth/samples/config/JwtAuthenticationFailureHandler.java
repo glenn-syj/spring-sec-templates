@@ -14,9 +14,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Component
-@Profile("oauth-session")
-public class SessionAuthenticationFailureHandler implements AuthenticationFailureHandler {
-	private static final Logger logger = LoggerFactory.getLogger(SessionAuthenticationFailureHandler.class);
+@Profile("oauth-jwt")
+public class JwtAuthenticationFailureHandler implements AuthenticationFailureHandler {
+	private static final Logger logger = LoggerFactory.getLogger(JwtAuthenticationFailureHandler.class);
 
 	@Override
 	public void onAuthenticationFailure(HttpServletRequest request,
