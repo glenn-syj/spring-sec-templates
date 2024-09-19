@@ -13,9 +13,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Component
-public class CustomOAuth2SuccessHandler implements AuthenticationSuccessHandler {
+public class SessionOAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
-	private static final Logger logger = LoggerFactory.getLogger(CustomOAuth2SuccessHandler.class);
+	private static final Logger logger = LoggerFactory.getLogger(SessionOAuth2SuccessHandler.class);
 
 	@Override
 	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws

@@ -12,14 +12,14 @@ import jakarta.servlet.http.*;
 import java.util.*;
 
 @Component
-public class CustomAuthorizationRequestResolver implements OAuth2AuthorizationRequestResolver {
+public class SessionAuthorizationRequestResolver implements OAuth2AuthorizationRequestResolver {
 
-	private static final Logger logger = LoggerFactory.getLogger(CustomAuthorizationRequestResolver.class);
+	private static final Logger logger = LoggerFactory.getLogger(SessionAuthorizationRequestResolver.class);
 
 	private final ClientRegistrationRepository clientRegistrationRepository;
 	private final String authorizationRequestBaseUri = "/oauth2/authorization";
 
-	public CustomAuthorizationRequestResolver(ClientRegistrationRepository clientRegistrationRepository) {
+	public SessionAuthorizationRequestResolver(ClientRegistrationRepository clientRegistrationRepository) {
 		this.clientRegistrationRepository = clientRegistrationRepository;
 	}
 

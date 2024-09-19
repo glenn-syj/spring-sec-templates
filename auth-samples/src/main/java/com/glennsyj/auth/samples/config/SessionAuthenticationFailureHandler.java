@@ -13,8 +13,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 @Component
-public class CustomAuthenticationFailureHandler implements AuthenticationFailureHandler {
-	private static final Logger logger = LoggerFactory.getLogger(CustomAuthenticationFailureHandler.class);
+public class SessionAuthenticationFailureHandler implements AuthenticationFailureHandler {
+	private static final Logger logger = LoggerFactory.getLogger(SessionAuthenticationFailureHandler.class);
 
 	@Override
 	public void onAuthenticationFailure(HttpServletRequest request,
