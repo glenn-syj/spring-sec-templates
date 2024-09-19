@@ -1,6 +1,7 @@
 package com.glennsyj.auth.samples.util;
 
 import java.util.Date;
+import java.util.Map;
 import java.util.function.Function;
 
 import org.springframework.stereotype.Component;
@@ -16,6 +17,16 @@ public class JwtUtil {
 
 	public String generateToken(String username) {
 		return Jwts.builder()
+			.setSubject(username)
+			.setIssuedAt(new Date(System.currentTimeMillis()))
+			.setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
+			.signWith(SignatureAlgorithm.HS256, JWT_KEY)
+			.compact();
+	}
+
+	public String generateToken(Map<String, Object> claims, String username) {
+		return Jwts.builder()
+			.setClaims(claims)
 			.setSubject(username)
 			.setIssuedAt(new Date(System.currentTimeMillis()))
 			.setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60))
