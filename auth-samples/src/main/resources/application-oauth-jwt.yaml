@@ -26,7 +26,7 @@ spring:
             authorization-grant-type: authorization_code
             redirect-uri: "http://localhost:8080/login/oauth2/code/mattermost"
             client-name: Mattermost
-            client-authentication-method: post
+            client-authentication-method: client_secret_post
         provider:
           mattermost:
             authorization-uri: http://localhost:8065/oauth/authorize
