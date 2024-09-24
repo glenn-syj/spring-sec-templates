@@ -2,6 +2,7 @@ package com.glennsyj.auth.samples.repository;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Profile;
 import org.springframework.security.oauth2.client.registration.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
@@ -10,6 +11,7 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import jakarta.servlet.http.*;
 
 @Component
+@Profile("oauth-session")
 public class CustomClientRegistrationRepository implements ClientRegistrationRepository {
 
 	private static final Logger logger = LoggerFactory.getLogger(CustomClientRegistrationRepository.class);
